@@ -1,134 +1,225 @@
 ﻿using Microsoft.Maui.Controls.Shapes;
+using Microsoft.Maui.Layouts;
 using System.Drawing;
+using System.Text.RegularExpressions;
 
 namespace MauiTimer
 {
     public partial class MainPage : ContentPage
     {
-        string timeString = "00:00:00";
+        //XAML ELEMENTS
+        private Line hourLine = default!;
+        private Line minuteLine = default!;
+        private Line secondLine = default!;
+
+        //THREAD
+        Thread clockThread = default!;
+        bool stopThread = false;
+
+        //TIME STRING
+        string formattedTimeString = "00:00:00";
+
         public MainPage()
         {
             InitializeComponent();
-            RenderGraduation();
-
             App.Current!.UserAppTheme = AppTheme.Light;
 
-            //Thread timeThread = new Thread(timer);
 
-            //timeThread.Start();
+            RenderClock();
+
+
+            clockThread = new Thread(RefreshClock);
+            clockThread.Start();
         }
 
-        //void timer()
-        //{
-        //    while (true)
-        //    {
-        //        DateTime time = DateTime.Now;
-        //        string hourString = time.Hour.ToString().Length == 1 ? "0" + time.Hour.ToString() : time.Hour.ToString();
-        //        string minuteString = time.Minute.ToString().Length == 1 ? "0" + time.Minute.ToString() : time.Minute.ToString();
-        //        string secondString = time.Second.ToString().Length == 1 ? "0" + time.Second.ToString() : time.Second.ToString();
-        //        //timeString = hourString + ":" + minuteString + ":" + secondString;
-
-        //        //Dispatcher.Dispatch(new Action(() => { label.Text = timeString; }));
-
-        //        Dispatcher.Dispatch(new Action(() => { hourLine.Rotation = ((time.Hour%12) * 30) + (time.Minute * 0.5) + (time.Second / 120.0); }));
-        //        Dispatcher.Dispatch(new Action(() => { minuteLine.Rotation = (time.Minute * 6) + (time.Second / 10.0); }));
-        //        Dispatcher.Dispatch(new Action(() => { secondLine.Rotation = (time.Second * 6); }));
-
-        //        Thread.Sleep(100);                
-        //    }
-        //}
-
-        void PlaceElements()
+        void RefreshClock()
         {
-            
-        }
-
-
-        void RenderGraduation()
-        {
-            var clockFaceBox = clock_face_container;
-            //var clockFace = clock_face;
-
-            for (int i = 0; i < 60; i++)
+            while (true)
             {
-                var line = new Line();
-                line.Stroke = Microsoft.Maui.Controls.Brush.Black;
-                line.X1 = 50;
-                line.Y1 = 30;
-                line.X2 = 50;
-                line.Y2 = 40;
-                line.Rotation = i * 6;
-                line.TranslationX = 0.5;
-                line.TranslationY = 0.5;
-                line.AnchorX = 0;
-                line.AnchorY = 0;
-                clockFaceBox.Children.Add(line);
+                if (stopThread)
+                {
+                    Thread.Sleep(100);
+                }
+                else
+                {
+                    DateTime time = DateTime.Now;
+                    string hours = time.Hour.ToString("D2");
+                    string minutes = time.Minute.ToString("D2");
+                    string seconds = time.Second.ToString("D2");
+                    string milliseconds = time.Millisecond.ToString("D3");
+
+
+                    formattedTimeString = hours + " : " + minutes + " : " + seconds + " : " + milliseconds;
+                    Dispatcher.Dispatch(new Action(() => { digital_clock.Text = formattedTimeString; }));
+
+                    Dispatcher.Dispatch(new Action(() => { hourLine.Rotation = ((time.Hour % 12) * 30) + (time.Minute / 2) + (time.Second / 120.0); }));
+                    Dispatcher.Dispatch(new Action(() => { minuteLine.Rotation = (time.Minute * 6) + (time.Second / 10.0); }));
+                    Dispatcher.Dispatch(new Action(() => { secondLine.Rotation = (time.Second * 6) + (time.Millisecond / 166.67); }));
+
+                    Thread.Sleep(15);
+                }
             }
         }
 
+        void RenderClock()
+        {
+            //VARIABLES
+            var clockFaceContainer = clock_face_container;
+            var clockFaceContainerWidth = clockFaceContainer.WidthRequest;
+            var clockFaceContainerHeight = clockFaceContainer.HeightRequest;
 
-        //XAML COMMENTED OUT
-//        <Ellipse
-//    x:Name="clock_face"
-//    WidthRequest="300"
-//    HeightRequest="300"
-//    Fill="Transparent"
-//    StrokeThickness="2"
-//    Stroke="Black"
-//    TranslationY="30"
-//    />
+            var clockFace = clock_face;
+            clockFace.WidthRequest = clockFaceContainerWidth;
+            clockFace.HeightRequest = clockFaceContainerHeight;
 
-//<Line
-//    Stroke = "Black"
-//    X1="50"
-//    Y1="30"
-//    X2="50"
-//    Y2="40"/>
 
-// <Line
-//    Stroke = "Black"
-//    X1="100"
-//    Y1="80"
-//    X2="90"
-//    Y2="80"/>
+            //DELETING UNNECESSARY LINES
+            {
+                var childrenToRemove = clockFaceContainer.Children
+                              .OfType<Line>()
+                              .ToList();
 
-// <Line
-//    Stroke = "Black"
-//    X1="50"
-//    Y1="130"
-//    X2="50"
-//    Y2="120"/>
+                foreach (var child in childrenToRemove)
+                {
+                    clockFaceContainer.Children.Remove(child);
+                }
+            }
 
-//<Line
-//    Stroke = "Black"
-//    X1="0"
-//    Y1="80"
-//    X2="10"
-//    Y2="80"/>
+            //GRADUATION LINES
+            for (int i = 0; i < 60; i++)
+            {
+                var graduationLine = new Line
+                {
+                    Stroke = Microsoft.Maui.Controls.Brush.Black,
+                    StrokeThickness = (i % 5 == 0) ? 4 : 2,
 
-//<Rectangle
-//    x:Name="secondLine"
-//    Fill="Black"
-//    AnchorX="0"
-//    AnchorY="0"
-//    AbsoluteLayout.LayoutBounds="50, 80, 2, 50"
-//    />
+                    X1 = clockFaceContainerWidth/2,
+                    Y1 = 0,
+                    X2 = clockFaceContainerWidth / 2,
+                    Y2 = (i % 5 == 0) ? 15 : 10,
 
-//<Rectangle
-//    x:Name="minuteLine"
-//    Fill="Black"
-//    AnchorX="0"
-//    AnchorY="0"
-//    AbsoluteLayout.LayoutBounds="50, 80, 2, 30"
-//    />
+                    WidthRequest = clockFaceContainerWidth,
+                    HeightRequest = clockFaceContainerHeight,
 
-//<Rectangle
-//    x:Name="hourLine"
-//    Fill="Red"
-//    AnchorX="0"
-//    AnchorY="0"
-//    AbsoluteLayout.LayoutBounds="50, 80, 3, 20"
-//    />
+                    AnchorX = 0.5,
+                    AnchorY = 0.5,
 
+                    Rotation = i * 6
+                };
+
+                AbsoluteLayout.SetLayoutBounds(graduationLine, new Rect(0.5, 0.5, -1, -1));
+                AbsoluteLayout.SetLayoutFlags(graduationLine, AbsoluteLayoutFlags.PositionProportional);
+                clockFaceContainer.Children.Add(graduationLine);
+            }
+
+            //TIME LINES
+            {
+                hourLine = new Line
+                {
+                    Stroke = Microsoft.Maui.Controls.Brush.Black,
+                    StrokeThickness = 4,
+
+                    X1 = 0,
+                    X2 = 0,
+                    Y1 = clockFaceContainerHeight * 0.3,
+                    Y2 = 0,
+
+                    TranslationY = -(clockFaceContainerHeight * 0.3) / 2,
+
+                    AnchorX = 0.5,
+                    AnchorY = 1,
+
+                    Rotation = 6
+                };
+
+                AbsoluteLayout.SetLayoutBounds(hourLine, new Rect(0.5, 0.5, -1, -1));
+                AbsoluteLayout.SetLayoutFlags(hourLine, AbsoluteLayoutFlags.PositionProportional);
+                clockFaceContainer.Children.Add(hourLine);
+
+                minuteLine = new Line
+                {
+                    Stroke = Microsoft.Maui.Controls.Brush.Black,
+                    StrokeThickness = 2,
+
+                    X1 = 0,
+                    X2 = 0,
+                    Y1 = clockFaceContainerHeight * 0.35,
+                    Y2 = 0,
+
+                    TranslationY = -(clockFaceContainerHeight * 0.35) / 2,
+
+                    AnchorX = 0.5,
+                    AnchorY = 1,
+
+                    Rotation = 90
+
+                };
+
+                AbsoluteLayout.SetLayoutBounds(minuteLine, new Rect(0.5, 0.5, -1, -1));
+                AbsoluteLayout.SetLayoutFlags(minuteLine, AbsoluteLayoutFlags.PositionProportional);
+                clockFaceContainer.Children.Add(minuteLine);
+
+                secondLine = new Line
+                {
+                    Stroke = Microsoft.Maui.Controls.Brush.Red,
+                    StrokeThickness = 1,
+
+                    X1 = 0,
+                    X2 = 0,
+                    Y1 = clockFaceContainerHeight * 0.45,
+                    Y2 = 0,
+
+                    TranslationY = -(clockFaceContainerHeight * 0.45) / 2,
+
+                    AnchorX = 0.5,
+                    AnchorY = 1,
+
+                    Rotation = 90
+
+                };
+
+                AbsoluteLayout.SetLayoutBounds(secondLine, new Rect(0.5, 0.5, -1, -1));
+                AbsoluteLayout.SetLayoutFlags(secondLine, AbsoluteLayoutFlags.PositionProportional);
+                clockFaceContainer.Children.Add(secondLine);
+            }
+
+            //ANCHORAGE POINT
+            {
+                var anchoragePoint = new Ellipse
+                {
+                    Fill = Microsoft.Maui.Controls.Brush.Black,
+                    WidthRequest = 10,
+                    HeightRequest = 10
+                };
+
+                AbsoluteLayout.SetLayoutBounds(anchoragePoint, new Rect(0.5, 0.5, -1, -1));
+                AbsoluteLayout.SetLayoutFlags(anchoragePoint, AbsoluteLayoutFlags.PositionProportional);
+                clockFaceContainer.Children.Add(anchoragePoint);
+            }
+        }
+
+        private void Change_Clock_Size(object sender, EventArgs e)
+        {
+            stopThread = true;
+
+            var clockSize = clock_size_input.Text;
+            Regex clockSizeRegex = new Regex(@"^\d+$");
+
+            if (clockSizeRegex.IsMatch(clockSize))
+            {
+                clock_face_container.WidthRequest = Convert.ToInt32(clockSize);
+                clock_face_container.HeightRequest = Convert.ToInt32(clockSize);
+
+                RenderClock();
+
+                stopThread = false;
+            }
+            else
+            {
+                clock_size_input.Text = "Invalid input";
+
+                stopThread = false;
+            }
+        }
     }
 }
