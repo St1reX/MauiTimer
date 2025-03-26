@@ -3,48 +3,50 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="MauiTimer.MainPage">
 
-    <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center">
+    <ScrollView HorizontalScrollBarVisibility="Always" VerticalScrollBarVisibility="Always">
+        <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Padding="0, 0, 0, 50">
+            <Label 
+                x:Name="digital_clock" 
+                BackgroundColor="Black" 
+                TextColor="White"
+                FontFamily="CyberAlert"
+                HorizontalTextAlignment="Center"
+                VerticalTextAlignment="Center"
+                WidthRequest="300" 
+                HeightRequest="100" 
+                FontSize="24"
+                Margin="50"/>
 
 
-        <Entry 
-            x:Name="clock_size_input"
-            PlaceholderColor="Gray" 
-            Placeholder="Clock size in px" 
-            Keyboard="Numeric" 
-            BackgroundColor="WhiteSmoke"
-            Margin="15"/>
 
-        <Button Text="Click to Change Size"
+            <AbsoluteLayout x:Name="clock_face_container" WidthRequest="500" HeightRequest="500">
+
+                <Ellipse
+                    x:Name="clock_face"
+                    Fill="Transparent"
+                    StrokeThickness="2"
+                    Stroke="Black"
+                    />
+
+            </AbsoluteLayout>
+
+            <Entry 
+                x:Name="clock_size_input"
+                PlaceholderColor="Gray" 
+                Placeholder="Clock size in px" 
+                Keyboard="Numeric" 
+                BackgroundColor="WhiteSmoke"
+                Margin="15"/>
+
+            <Button Text="Click to Change Size"
                 VerticalOptions="Center"
                 HorizontalOptions="Center"
                 Clicked="Change_Clock_Size"/>
 
-        <Label 
-            x:Name="digital_clock" 
-            BackgroundColor="Black" 
-            TextColor="White"
-            FontFamily="CyberAlert"
-            HorizontalTextAlignment="Center"
-            VerticalTextAlignment="Center"
-            WidthRequest="300" 
-            HeightRequest="100" 
-            FontSize="24"
-            Margin="50"/>
 
-
-
-        <AbsoluteLayout x:Name="clock_face_container" WidthRequest="500" HeightRequest="500">
-
-            <Ellipse
-            x:Name="clock_face"
-            Fill="Transparent"
-            StrokeThickness="2"
-            Stroke="Black"
-            />
-
-        </AbsoluteLayout>
-        
-    </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+    
     
 
 </ContentPage>

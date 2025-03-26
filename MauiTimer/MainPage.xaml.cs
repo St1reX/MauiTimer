@@ -166,10 +166,10 @@ namespace MauiTimer
 
                     X1 = 0,
                     X2 = 0,
-                    Y1 = clockFaceContainerHeight * 0.45,
+                    Y1 = clockFaceContainerHeight * 0.42,
                     Y2 = 0,
 
-                    TranslationY = -(clockFaceContainerHeight * 0.45) / 2,
+                    TranslationY = -(clockFaceContainerHeight * 0.42) / 2,
 
                     AnchorX = 0.5,
                     AnchorY = 1,
