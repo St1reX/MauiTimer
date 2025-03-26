@@ -32,7 +32,9 @@ namespace MauiTimer
             clockThread.Start();
         }
 
-        void RefreshClock()
+
+        //HANDS OF CLOCK ROTATION
+        private void RefreshClock()
         {
             while (true)
             {
@@ -61,7 +63,8 @@ namespace MauiTimer
             }
         }
 
-        void RenderClock()
+        //GRADUATION LINES, HANDS OF CLOCK, ANCHORAGE POINT RENDERING
+        private void RenderClock()
         {
             //VARIABLES
             var clockFaceContainer = clock_face_container;
@@ -91,12 +94,12 @@ namespace MauiTimer
                 var graduationLine = new Line
                 {
                     Stroke = Microsoft.Maui.Controls.Brush.Black,
-                    StrokeThickness = (i % 5 == 0) ? 4 : 2,
+                    StrokeThickness = (i % 5 == 0) ? 3 : 2,
 
                     X1 = clockFaceContainerWidth/2,
                     Y1 = 0,
                     X2 = clockFaceContainerWidth / 2,
-                    Y2 = (i % 5 == 0) ? 15 : 10,
+                    Y2 = (i % 5 == 0) ? clockFaceContainerWidth * 0.04 : clockFaceContainerWidth * 0.02,
 
                     WidthRequest = clockFaceContainerWidth,
                     HeightRequest = clockFaceContainerHeight,
@@ -107,8 +110,8 @@ namespace MauiTimer
                     Rotation = i * 6
                 };
 
-                AbsoluteLayout.SetLayoutBounds(graduationLine, new Rect(0.5, 0.5, -1, -1));
-                AbsoluteLayout.SetLayoutFlags(graduationLine, AbsoluteLayoutFlags.PositionProportional);
+                //AbsoluteLayout.SetLayoutBounds(graduationLine, new Rect(0.5, 0.5, -1, -1));
+                //AbsoluteLayout.SetLayoutFlags(graduationLine, AbsoluteLayoutFlags.PositionProportional); UNNECESSARY
                 clockFaceContainer.Children.Add(graduationLine);
             }
 
@@ -198,6 +201,22 @@ namespace MauiTimer
             }
         }
 
+        //RESIZE CLOCK ON WINDOW RESIZE
+        protected override void OnSizeAllocated(double width, double height)
+        {
+            base.OnSizeAllocated(width, height);
+
+            stopThread = true;
+
+            clock_face_container.WidthRequest = width * 0.35;
+            clock_face_container.HeightRequest = width * 0.35;
+
+            RenderClock();
+
+            stopThread = false;
+        }
+
+        //RESIZE CLOCK ON BUTTON CLICK
         private void Change_Clock_Size(object sender, EventArgs e)
         {
             stopThread = true;
